@@ -179,10 +179,8 @@ fn transform_item(
     //     fn stream(&self) -> impl Iterator<Item = i32> + Send;
     //     fn call(&self) -> u32;
     // }
-    println!("here");
     let TraitItem::Fn(fn_item @ TraitItemFn { sig, .. }) = item else {
         let TraitItem::Type(trait_type) = item else {
-            println!("not this");
             return item.clone();
         };
         return TraitItem::Type(TraitItemType {
@@ -238,7 +236,6 @@ fn update_bounds(
     bounds: &Punctuated<TypeParamBound, Plus>,
     replacements: &Vec<Replacement>,
 ) -> Punctuated<TypeParamBound, Plus> {
-    println!("{}", replacements.len());
     let mut out = Punctuated::new();
     for el in bounds {
         let TypeParamBound::Trait(bound) = el else {
@@ -248,10 +245,6 @@ fn update_bounds(
         let mut bound = bound.clone();
         let to_replace = bound.path.segments.last_mut().unwrap();
         for rep in replacements {
-            println!(
-                "at {} doing {} -> {}",
-                to_replace.ident, rep.original, rep.variant_name
-            );
             if to_replace.ident == rep.original {
                 to_replace.ident = rep.variant_name.clone();
             }

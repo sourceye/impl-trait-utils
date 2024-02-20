@@ -165,6 +165,7 @@ fn transform_item(
     bounds: &Vec<TypeParamBound>,
     replacements: &Vec<Replacement>,
 ) -> TraitItem {
+    // TODO refactor
     // #[make_variant(SendIntFactory: Send)]
     // trait IntFactory {
     //     async fn make(&self, x: u32, y: &str) -> i32;
@@ -195,7 +196,23 @@ fn transform_item(
         });
     };
     let (arrow, output) = if sig.asyncness.is_some() {
-        let orig = match &sig.output {
+        let ret = match &sig.output {
+            ReturnType::Type(arrow, ty) => ReturnType::Type(
+                *arrow,
+                match &**ty {
+                    Type::ImplTrait(it) => {
+                        let ty = Type::ImplTrait(TypeImplTrait {
+                            impl_token: it.impl_token,
+                            bounds: it.bounds.iter().chain(bounds).cloned().collect(),
+                        });
+                        Box::new(ty)
+                    }
+                    ret => Box::new(ret.clone()),
+                },
+            ),
+            ReturnType::Default => ReturnType::Default,
+        };
+        let orig = match ret {
             ReturnType::Default => quote! { () },
             ReturnType::Type(_, ty) => quote! { #ty },
         };
